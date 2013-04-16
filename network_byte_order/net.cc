@@ -10,8 +10,9 @@ namespace net
   uint32_t ntohl(uint32_t net32);  
   uint16_t ntohs(uint16_t net16);
   
+  // kkloepper: Remove '= delete' to allow types of unsigned to compile.
   template<typename T>
-    constexpr T hton(T host) noexcept;
+    constexpr T hton(T host) noexcept = delete;
 
   // XXX only when host is little endian
   template<>
@@ -31,7 +32,7 @@ namespace net
     constexpr T ntoh(T net);
 
   template<>
-  constexpr uint32_t ntoh(uint32_t host);
+  constexpr uint32_t ntoh(uint32_t host) = delete;
 
 } // namespace net
 } // namespace std
@@ -39,11 +40,14 @@ namespace net
 
 int main()
 {
-  typedef std::uint32_t int_type;
+
+  // uint32_t OK.
+  //typedef std::uint32_t int_type;
+  // unsigned does not compile with '= delete'.
+  typedef unsigned int_type;
   constexpr int_type b(4444444);
   constexpr int_type bswap(std::net::hton(b));
   static_assert(b != bswap, "byte swap didn't work");
-
 
   return 0;
 }
