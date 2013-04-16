@@ -1,0 +1,43 @@
+export srcdir ?= $(shell pwd)
+
+OPTIMIZATION := -O3
+
+CC=gcc-4.8
+CXX=g++-4.8
+
+ifneq ($(shell $(CXX) --version >& /dev/null ; echo $$?), 0)
+    CC=gcc
+    CXX=g++
+endif
+
+CXX_VERSION := $(shell $(CXX) -dumpversion)
+
+BUILD_DEPS := -I$(srcdir)
+CFLAGS := -Wall -Werror -Wunused -W -g $(OPTIMIZATION) $(BUILD_DEPS)
+CXXFLAGS :=$(CFLAGS)
+
+PCAP_LIB := $(PCAP_LIB_DIR)/libpcap.a
+BOOST_TEST_LIBS := $(BOOST_LIB_DIR)/libboost_test_exec_monitor-gcc*-mt.a
+BOOST_PROGRAM_OPTIONS_LIB := $(BOOST_LIB_DIR)/libboost_program_options-gcc*-mt.a
+BOOST_FILE_SYSTEM_LIB := $(BOOST_LIB_DIR)/libboost_filesystem-gcc*-mt.a
+BOOST_SYSTEM_LIB := $(BOOST_LIB_DIR)/libboost_system-gcc*-mt.a
+BOOST_REGEX_LIB := $(BOOST_LIB_DIR)/libboost_regex-gcc*-mt.a
+BOOST_SERIALIZATION_LIB := $(BOOST_LIB_DIR)/libboost_serialization-gcc*-mt.a
+BOOST_ASIO_LIB := $(BOOST_LIB_DIR)/libboost_asio-gcc*-mt.a
+
+%.d : %.c
+	@set -e; rm -f $@; \
+	$(CC) $(CPPFLAGS) $(BUILD_DEPS) -MM -MF $@ -MT "$(<:.c=.o) $@" $<;
+
+%.d : %.cc
+	@set -e; rm -f $@; \
+	$(CXX) $(CPPFLAGS) $(BUILD_DEPS) -MM -MF $@ -MT "$(<:.cc=.o) $@" $<;
+
+%.bin : %.o
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $^ $(LDFLAGS) $(LDLIBS) -o $(@:.bin=)
+
+% : %.o
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $^ $(LDFLAGS) $(LDLIBS) -o $(@:.bin=)
+
+lib%.so : %.o
+	$(CXX) $^ -shared $(LDFLAGS) $(LDLIBS) -o $@
